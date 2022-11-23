@@ -5,9 +5,9 @@ import java.net.Socket;
 
 public class HttpRequest {
 
-    public static final RawHttpURL OK = RawHttpURL.create("","","HTTP/1.1","200","ok");
+    public static final RawHttpURL OK = RawHttpURL.create("", "", "HTTP/1.1", "200", "ok");
 
-    public static final RawHttpURL NOTFOUND =  RawHttpURL.create("","","HTTP/1.1","404","404 not found resource");
+    public static final RawHttpURL NOTFOUND = RawHttpURL.create("", "", "HTTP/1.1", "404", "404 not found resource");
 
     private static final String CRLF = "\r\n";
 
@@ -15,6 +15,8 @@ public class HttpRequest {
 
     private InputStream inputStream;
     private RawHttpURL firstLine = OK;
+
+    private HttpHeader header;
 
     public HttpRequest(Socket socket) throws IOException {
         this.socket = socket;
@@ -25,9 +27,20 @@ public class HttpRequest {
     private void init() throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(getInputStream()));
         firstLine = RawHttpURL.create().parse(br.readLine());
+        header = new HttpHeader();
+        String s = null;
+        while ((s = br.readLine()) != null) {
+            if (s.equals("")) break;
+            String[] k = s.split(": ");
+            header.addHeader(k[0], k[1]);
+        }
     }
 
-    public RawHttpURL getRawHttpURL(){
+    public HttpHeader getHeader(){
+        return header;
+    }
+
+    public RawHttpURL getRawHttpURL() {
         return firstLine;
     }
 
@@ -35,15 +48,14 @@ public class HttpRequest {
         return inputStream;
     }
 
-    public HttpRequest setFirstLine(RawHttpURL firstLine){
+    public HttpRequest setFirstLine(RawHttpURL firstLine) {
         this.firstLine = firstLine;
         return this;
     }
 
 
-
-    public String toString(){
-
+    public String toString() {
+        return null;
     }
 }
 

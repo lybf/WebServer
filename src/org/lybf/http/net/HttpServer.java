@@ -1,5 +1,8 @@
 package org.lybf.http.net;
 
+import org.lybf.http.beans.HttpRequest;
+import org.lybf.http.beans.HttpRespond;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -17,8 +20,8 @@ public class HttpServer {
 
     private ServerSocket serverSocket;
 
-    private HashMap<String,String> htmls = new HashMap<>();
-    private HashMap<String,String> res = new HashMap<>();
+    private HashMap<String, String> htmls = new HashMap<>();
+    private HashMap<String, String> res = new HashMap<>();
 
     public HttpServer setIndexHtml(String indexHtml) {
         this.indexHtml = indexHtml;
@@ -29,25 +32,26 @@ public class HttpServer {
         return indexHtml;
     }
 
-    public HttpServer addHtml(String name,String path){
-        htmls.put(name,path);
+    public HttpServer addHtml(String name, String path) {
+        htmls.put(name, path);
         return this;
     }
 
-    public String getHtml(String name){
-        if(htmls.containsKey(name))return htmls.get(name);
+    public String getHtml(String name) {
+        if (htmls.containsKey(name)) return htmls.get(name);
         return null;
     }
 
-    public HttpServer addRes(String name,String path){
-        res.put(name,path);
+    public HttpServer addRes(String name, String path) {
+        res.put(name, path);
         return this;
     }
 
-    public String getRes(String name){
-        if(res.containsKey(name))return res.get(name);
+    public String getRes(String name) {
+        if (res.containsKey(name)) return res.get(name);
         return null;
     }
+
     public HttpServer setDir(String dir) {
         this.dir = dir;
         return this;
@@ -82,8 +86,16 @@ public class HttpServer {
         return this;
     }
 
+    private RequestListener listener;
+
+    public HttpServer setRequestListener(RequestListener requestListener) {
+        listener = requestListener;
+        return this;
+    }
+
     private int maxThreads = 10;
     private boolean running = true;
+
 
     private ExecutorService threads;
 
@@ -122,8 +134,11 @@ public class HttpServer {
                 //  if(!socket.isConnected())return;
                 System.out.println("----------Accept a connect---------");
                 System.out.println("ip:" + socket.getInetAddress());
-                //处理请求消息
-                //回传数据
+                 if (listener != null) {
+                    HttpRequest request = new HttpRequest(socket);
+                    HttpRespond respond = new HttpRespond(socket);
+                    listener.onRequest(request, respond);
+                }
                 RequestHandler requestHandler = new RequestHandler(HttpServer.this);
                 requestHandler.processRequest(socket);
 

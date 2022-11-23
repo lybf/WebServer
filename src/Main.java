@@ -1,4 +1,7 @@
+import org.lybf.http.beans.HttpRequest;
+import org.lybf.http.beans.HttpRespond;
 import org.lybf.http.net.HttpServer;
+import org.lybf.http.net.RequestListener;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -28,6 +31,12 @@ public class Main {
         for(String k : res.keySet()){
             server.addRes(k,res.get(k));
         }
+        server.setRequestListener(new RequestListener() {
+            @Override
+            public void onRequest(HttpRequest request, HttpRespond respond) {
+
+            }
+        });
         server.startHttpServer();
         /*
         http://127.0.0.1:8066/getFiles?filter=html
