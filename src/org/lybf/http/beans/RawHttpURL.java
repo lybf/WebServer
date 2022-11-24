@@ -60,10 +60,11 @@ public class RawHttpURL {
     }
 
     public boolean hasKey() {
-        return (PATH.contains("\\?"));
+        return (PATH.contains("?"));
     }
 
     public HashMap<String, String> getKeys() {
+        //System.out.println("has key = "+hasKey());
         if (hasKey()) return processKey(PATH.split("\\?")[1]);
         return null;
     }

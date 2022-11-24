@@ -35,6 +35,9 @@ public class HttpRequest {
             header.addHeader(k[0], k[1]);
         }
     }
+    public Socket getSocket(){
+        return socket;
+    }
 
     public HttpHeader getHeader(){
         return header;

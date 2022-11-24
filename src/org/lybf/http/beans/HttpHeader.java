@@ -44,6 +44,9 @@ public class HttpHeader {
         }
     }
 
+    public HashMap<String,ArrayList<String>> getHeaders(){
+        return headers;
+    }
     public String toString() {
         StringJoiner result = new StringJoiner(CRLF);
         for (String key : headers.keySet()) {

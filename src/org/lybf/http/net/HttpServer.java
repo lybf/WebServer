@@ -139,8 +139,6 @@ public class HttpServer {
                     HttpRespond respond = new HttpRespond(socket);
                     listener.onRequest(request, respond);
                 }
-                RequestHandler requestHandler = new RequestHandler(HttpServer.this);
-                requestHandler.processRequest(socket);
 
             } catch (Exception e) {
                 e.printStackTrace();

@@ -5,14 +5,17 @@ import java.net.HttpURLConnection;
 import java.net.Socket;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.net.URLDecoder;
+import java.util.StringJoiner;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.lybf.http.beans.FileType;
 import org.lybf.http.beans.FirstLine;
+import org.lybf.http.beans.HttpRequest;
 import org.lybf.http.beans.Respond;
 
 
@@ -21,31 +24,21 @@ public class RequestHandler {
     private final HttpServer httpServer;
     private Socket socket;
 
+    private final String CRLF = "\r\n";
+    private HttpRequest request;
+
     public RequestHandler(HttpServer httpServer) {
         this.httpServer = httpServer;
     }
 
-    public RequestHandler processRequest(Socket socket) throws IOException {
-        this.socket = socket;
-        BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        FirstLine firstLine = FirstLine.Factory.obtain().parse(br.readLine());
 
-        String decoder = URLDecoder.decode(firstLine.toString());
-        System.out.println("firstline = " + decoder);
-        String method = firstLine.getMethod();
-        HashMap<String, String> headers = new HashMap<>();
-        String s = null;
-        while ((s = br.readLine()) != null) {
-            if (s.equals("")) {
-                break;
-            } else {
-                String[] header = s.split(": ");
-                headers.put(header[0], header[1]);
-            }
-        }
+    public RequestHandler processRequest(HttpRequest request) {
+        this.request = request;
+        this.socket = request.getSocket();
+        String method = request.getRawHttpURL().getMethod();
         if (method != null) {
             if (method.equals(FirstLine.GET)) {
-                processGET(firstLine, headers, socket);
+                processGET();
             }
             if (method.equals(FirstLine.POST)) {
 
@@ -57,47 +50,50 @@ public class RequestHandler {
     /*
      *处理GET方法
      */
-    private void processGET(FirstLine firstline, HashMap<String, String> headers, Socket socket) {
+    private void processGET() {
         if (socket.isConnected()) {
             String path = null;
             try {
-                path = URLDecoder.decode(firstline.getPath(), "utf-8");
+                path = URLDecoder.decode(request.getRawHttpURL().getPath(), "utf-8");
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException(e);
             }
 
             if (path.matches("^http")) {
-                processHttp(path, headers, socket);
+                processHttp(path, socket);
             } else if (path.contains("?")) {
                 String[] datas = path.split("\\?");
                 //process getFiles action
-                if (datas[0].contains("getFiles")) processsGetFiles(firstline, firstline.getKeys());
+                if (datas[0].contains("getFiles")) processsGetFiles();
 
             } else if (path.contains("getFiles")) {
-                processsGetFiles(firstline, null);
+                processsGetFiles();
             } else if (path.equals("/") || path.equals("")) {
-                processText(null, httpServer.getIndexHtml(), "text/html");
+                processText(httpServer.getIndexHtml(), "text/html");
             } else if (path.contains("html")) {
-                processText(firstline, path, "text/html");
+                processText(path, "text/html");
             } else if (path.contains("js")) {
-                processText(firstline, path, "text/JavaScript");
+                processText(path, "text/JavaScript");
             } else if (path.contains("css")) {
-                processText(firstline, path, "text/css");
+                processText(path, "text/css");
             } else {
                 processFile(path);
             }
         }
     }
 
-    private void processHttp(String path, HashMap<String, String> headers, Socket socket) {
+    private void processHttp(String path, Socket socket) {
         HttpURLConnection httpURLConnection;
         try {
             httpURLConnection = (HttpURLConnection) new URL(path).openConnection();
-            for (String key : headers.keySet()) {
-                String header = headers.get(key);
-                if (header != null && !header.equals("")) {
-                    httpURLConnection.setRequestProperty(key, headers.get(key));
+            for (String key : request.getHeader().getHeaders().keySet()) {
+                ArrayList<String> values = request.getHeader().getHeaders().get(key);
+                StringJoiner result = new StringJoiner(CRLF);
+                StringJoiner paramters = new StringJoiner(",");
+                for (String value : values) {
+                    paramters.add(value);
                 }
+                httpURLConnection.addRequestProperty(key, paramters.toString());
             }
             OutputStream out = socket.getOutputStream();
             InputStream input = httpURLConnection.getInputStream();
@@ -143,7 +139,7 @@ public class RequestHandler {
     /*
      *   HTML,JS,Css....
      */
-    private void processText(FirstLine firstLine, String path, String type) {
+    private void processText(String path, String type) {
         String p;
         String s1 = httpServer.getHtml(path);
         if (s1 != null) {
@@ -185,8 +181,9 @@ public class RequestHandler {
     }
 
 
-    private void processsGetFiles(FirstLine firstLine, HashMap<String, String> map) {
+    private void processsGetFiles() {
         String path = "\\";
+        HashMap<String, String> map = request.getRawHttpURL().getKeys();
         if (map != null) {
             if (map.containsKey("path")) {
                 path = map.get("path");
@@ -197,6 +194,7 @@ public class RequestHandler {
         File file = new File(httpServer.getDir() + "\\" + path);
         File[] files = new File[0];
         if (map != null && map.containsKey("filter")) {
+            System.out.println("filter = " + map.get("filter"));
             final String filter = map.get("filter");
             files = file.listFiles(new FileFilter() {
                 public boolean accept(File pathname) {
@@ -223,9 +221,24 @@ public class RequestHandler {
         Respond respond = new Respond();
         FirstLine first = FirstLine.Factory.obtain(null, null, "HTTP/1.1", "200", "OK");
         respond.setFirstLine(first);
-        respond.addHeader("Content-type: application/json");
-        respond.setBody(new StringBuffer().append(jsonArray.toString()));
+        System.out.println("has returnType=" + map.containsKey("returnType"));
+        if (map.containsKey("returnType")) {
+            if (map.get("returnType").equals("jsonp")) {
+                respond.addHeader("Content-type: application/javascrpit");
+                if (map.containsKey("callback")) {
+                    String method = map.get("callback");
+                    System.out.println("callbackMethod=" + method);
+                    StringBuffer back = new StringBuffer(method + "(" + jsonArray.toString() + ")");
+                    System.out.println("callback = " + back);
+                    respond.setBody(back);
+                }
+            }
+        } else {
+            respond.addHeader("Content-type: application/json");
+            respond.setBody(new StringBuffer().append(jsonArray.toString()));
+        }
         try {
+            System.out.println("send");
             sendText(respond);
         } catch (Exception e) {
             e.printStackTrace();
@@ -280,7 +293,7 @@ public class RequestHandler {
                 respond.getHeaders().toString()
                 + "\r\n\r\n"
                 + respond.getBody().toString();
-        System.out.println("send content: \r\n" + info);
+        //  System.out.println("send content: \r\n" + info);
         try {
             out.write(info.getBytes("utf-8"));
             out.flush();
