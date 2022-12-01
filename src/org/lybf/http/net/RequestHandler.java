@@ -13,10 +13,7 @@ import java.util.StringJoiner;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.lybf.http.beans.FileType;
-import org.lybf.http.beans.FirstLine;
-import org.lybf.http.beans.HttpRequest;
-import org.lybf.http.beans.Respond;
+import org.lybf.http.beans.*;
 
 
 public class RequestHandler {
@@ -26,21 +23,23 @@ public class RequestHandler {
 
     private final String CRLF = "\r\n";
     private HttpRequest request;
+    private HttpRespond respond;
 
     public RequestHandler(HttpServer httpServer) {
         this.httpServer = httpServer;
     }
 
 
-    public RequestHandler processRequest(HttpRequest request) {
+    public RequestHandler processRequest(HttpRequest request, HttpRespond respond) {
         this.request = request;
+        this.respond = respond;
         this.socket = request.getSocket();
         String method = request.getRawHttpURL().getMethod();
         if (method != null) {
-            if (method.equals(FirstLine.GET)) {
+            if (method.equals(RawHttpURL.GET)) {
                 processGET();
             }
-            if (method.equals(FirstLine.POST)) {
+            if (method.equals(RawHttpURL.POST)) {
 
             }
         }
@@ -120,13 +119,12 @@ public class RequestHandler {
             p = (httpServer.getDir() + path).replaceAll("/", "\\\\");
         }
         File file = new File(p);
-        Respond respond = new Respond();
-        respond.setFirstLine(FirstLine.Factory.obtain(null, null, "HTTP/1.1", "200", "OK"));
-        respond.addHeader("Content-length: " + file.length() + "\r\n");
+        respond.setFirstLine(RawHttpURL.OK);
+        respond.setRespondHeader(HttpHeader.ContentLength, "" + file.length());
         if (FileType.getContentType(file) != null) {
-            respond.addHeader("Content-type: " + FileType.getContentType(file) + "\r\n");
+            respond.addRespondHeader("Content-type", FileType.getContentType(file));
             try {
-                send(respond, file);
+                send(file);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -147,16 +145,15 @@ public class RequestHandler {
         } else {
             p = (httpServer.getDir() + path).replaceAll("/", "\\\\");
         }
-        System.out.println("GETpath = " + p);
+        System.out.println("GET path = " + p);
         File file = new File(p);
-        Respond respond = new Respond();
 
         StringBuffer sb = new StringBuffer();
         System.out.println("file exists=" + file.exists());
         if (file.exists()) {
-            respond.setFirstLine(FirstLine.Factory.obtain(null, null, "HTTP/1.1", "200", "OK"));
-            respond.addHeader("Content-type: " + type + ";charset=utf-8");
-            respond.addHeader("\r\n" + "Content-length: " + file.length());
+            respond.setFirstLine(RawHttpURL.OK);
+            respond.addRespondHeader("Content-type", type + ";charset=utf-8");
+            respond.setRespondHeader(HttpHeader.ContentLength, file.length());
             InputStream input = null;
             try {
                 input = new FileInputStream(file);
@@ -173,8 +170,15 @@ public class RequestHandler {
                 }
                 sb.append(s + System.lineSeparator());
             }
-            respond.setBody(sb);
-            sendText(respond);
+            try {
+                // respond.addRespondHeader(HttpHeader.ContentLength,sb.toString().getBytes().length);
+
+                respond.write(sb.toString().getBytes());
+                respond.flush();
+                respond.disconnect();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else {
             cantNotFound();
         }
@@ -218,53 +222,46 @@ public class RequestHandler {
             jsonArray.put(jobj);
         }
 
-        Respond respond = new Respond();
-        FirstLine first = FirstLine.Factory.obtain(null, null, "HTTP/1.1", "200", "OK");
-        respond.setFirstLine(first);
+        respond.setFirstLine(RawHttpURL.OK);
         System.out.println("has returnType=" + map.containsKey("returnType"));
         if (map.containsKey("returnType")) {
             if (map.get("returnType").equals("jsonp")) {
-                respond.addHeader("Content-type: application/javascrpit");
+                respond.addRespondHeader("Content-type", "application/javascrpit");
                 if (map.containsKey("callback")) {
                     String method = map.get("callback");
                     System.out.println("callbackMethod=" + method);
                     StringBuffer back = new StringBuffer(method + "(" + jsonArray.toString() + ")");
                     System.out.println("callback = " + back);
-                    respond.setBody(back);
+                    respond.setRespondHeader(HttpHeader.ContentLength, back.toString().getBytes().length);
+
+                    try {
+                        respond.write(back.toString().getBytes());
+                        respond.disconnect();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         } else {
-            respond.addHeader("Content-type: application/json");
-            respond.setBody(new StringBuffer().append(jsonArray.toString()));
-        }
-        try {
-            System.out.println("send");
-            sendText(respond);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            respond.addRespondHeader("Content-type", "application/json");
 
-    }
-
-    /*
-     * 处理GET请求参数
-     */
-    private HashMap<String, String> processKey(String keys) {
-        HashMap<String, String> keys2 = new HashMap<String, String>();
-        if (keys.contains("&")) {
-            String[] k = keys.split("&");
-            for (String k2 : k) {
-                String[] s = k2.split("=");
-                keys2.put(s[0], s[1]);
+            try {
+                respond.addRespondHeader(HttpHeader.ContentLength, jsonArray.toString().getBytes().length);
+                respond.write(jsonArray.toString().getBytes());
+                System.out.println("send " + jsonArray.toString());
+                respond.flush();
+                respond.disconnect();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-        return keys2;
+
     }
 
+
     private void cantNotFound() {
-        Respond respond = new Respond();
-        respond.setFirstLine(FirstLine.Factory.obtain(null, null, "HTTP/1.1", "404", "404NotFound"));
-        respond.addHeader("Content-type: text/html;charset-utf-8");
+        respond.setFirstLine(RawHttpURL.create(null, null, "HTTP/1.1", "404", "404NotFound"));
+        respond.addRespondHeader("Content-type", "text/html;charset-utf-8");
         String notfound =
                 "<!DOCTYPE html>\r\n" +
                         "<html>" +
@@ -276,58 +273,30 @@ public class RequestHandler {
                         "            <center><h1>404 Could not found resources</h1></center>" +
                         "      </body>" +
                         "</html";
-        respond.setBody(new StringBuffer().append(notfound));
-        sendText(respond);
-    }
-
-    //给客户端发送消息
-    private void sendText(Respond respond) {
-        OutputStream out = null;
         try {
-            out = socket.getOutputStream();
+            respond.setRespondHeader(HttpHeader.ContentLength, notfound.getBytes().length);
+            respond.write(notfound.getBytes());
+            respond.disconnect();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        String info = respond.getFirstLine().toString() +
-                "\r\n" +
-                respond.getHeaders().toString()
-                + "\r\n\r\n"
-                + respond.getBody().toString();
-        //  System.out.println("send content: \r\n" + info);
-        try {
-            out.write(info.getBytes("utf-8"));
-            out.flush();
-            socket.shutdownOutput();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-
-        }
-
-        System.out.println("\r\n\r\n");
     }
 
-    private void send(Respond respond, File file) throws Exception {
+    //给客户端发送消息
+
+
+    private void send(File file) throws Exception {
         System.out.println("-------------send-----------");
-        OutputStream out = socket.getOutputStream();
-        out.write(respond.getFirstLine().toString().getBytes());
-        out.write("\r\n".getBytes());
-        //
-        //write headers
-        out.write((respond.getHeaders().toString()).getBytes());
-        //System.out.println(respond.getHeaders().toString());
-        //write body
-        out.write("\r\n".getBytes());
         System.out.println("SendFile = " + file.getPath());
         byte[] bytes = new byte[1024];
         int j = -1;
         FileInputStream input = new FileInputStream(file);
         while ((j = input.read(bytes)) > 0) {
-            out.write(bytes);
+            respond.write(bytes);
         }
-        out.write("\r\n".getBytes());
-        out.flush();
+        respond.flush();
         System.out.println("--------------endsend--------------");
-
+        respond.disconnect();
     }
 
 }

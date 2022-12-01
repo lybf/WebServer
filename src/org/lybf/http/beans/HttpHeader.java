@@ -18,6 +18,26 @@ public class HttpHeader {
         headers = new HashMap<>();
     }
 
+    public HttpHeader addHeader(String key, int value) {
+        addHeader(key, "" + value);
+        return this;
+    }
+
+    public HttpHeader addHeader(String key, long value) {
+        addHeader(key, "" + value);
+        return this;
+    }
+
+    public HttpHeader addHeader(String key, float value) {
+        addHeader(key, "" + value);
+        return this;
+    }
+
+    public HttpHeader addHeader(String key, short value) {
+        addHeader(key, "" + value);
+        return this;
+    }
+
     public HttpHeader addHeader(String key, String value) {
         ArrayList<String> values = new ArrayList<>();
         if (headers.containsKey(key)) {
@@ -32,8 +52,22 @@ public class HttpHeader {
             values.add(value);
             headers.put(key, values);
         }
-
         return this;
+    }
+
+    public HttpHeader setHeader(String key, String value) {
+        ArrayList<String> values = new ArrayList<>();
+        values.add(value);
+        headers.put(key, values);
+        return this;
+    }
+
+    public HttpHeader setHeader(String key, int value) {
+        return setHeader(key, "" + value);
+    }
+
+    public HttpHeader setHeader(String key, long value) {
+        return setHeader(key, "" + value);
     }
 
     public ArrayList<String> getHeader(String key) {
@@ -44,9 +78,10 @@ public class HttpHeader {
         }
     }
 
-    public HashMap<String,ArrayList<String>> getHeaders(){
+    public HashMap<String, ArrayList<String>> getHeaders() {
         return headers;
     }
+
     public String toString() {
         StringJoiner result = new StringJoiner(CRLF);
         for (String key : headers.keySet()) {

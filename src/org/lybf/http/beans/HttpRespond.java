@@ -42,6 +42,10 @@ public class HttpRespond {
         return outputStream;
     }
 
+    public HttpRespond setContentType(String type){
+        addRespondHeader("Content-type",type);
+        return this;
+    }
     /*
         set header
      */
@@ -49,6 +53,42 @@ public class HttpRespond {
         if (infoHadWrite) throw new IllegalStateException("had connect,you can't to add any header info");
         if (key == null) throw new NullPointerException("key is null");
         headers.addHeader(key, value);
+        return this;
+    }
+    public HttpRespond addRespondHeader(String key, int value) {
+        if (infoHadWrite) throw new IllegalStateException("had connect,you can't to add any header info");
+        headers.addHeader(key, value);
+        return this;
+    }
+
+
+
+    public HttpRespond addRespondHeader(String key, long value) {
+        addRespondHeader(key, "" + value);
+        return this;
+    }
+
+    public HttpRespond addRespondHeader(String key, float value) {
+        addRespondHeader(key, "" + value);
+        return this;
+    }
+
+    public HttpRespond addRespondHeaderr(String key, short value) {
+        addRespondHeader(key, "" + value);
+        return this;
+    }
+
+    public HttpRespond setRespondHeader(String key,String value){
+        headers.setHeader(key,value);
+        return this;
+    }
+    public HttpRespond setRespondHeader(String key,int value){
+        headers.setHeader(key,value);
+        return this;
+    }
+
+    public HttpRespond setRespondHeader(String key,long value){
+        headers.setHeader(key,value);
         return this;
     }
 
@@ -63,8 +103,9 @@ public class HttpRespond {
             String info = firstLine +
                     CRLF +
                     ((header.equals("") || header.toString() == null) ? "Content-type: text/plain" : header) +
-                    CRLF +
-                    CRLF;
+                    CRLF+"\n";
+
+            System.out.println("info :\n"+info);
             getOutputStream().write(info.getBytes());
             infoHadWrite = true;
         }
@@ -72,6 +113,14 @@ public class HttpRespond {
         return this;
     }
 
+
+    public void flush() throws IOException {
+        getOutputStream().flush();
+    }
+
+    public void disconnect() throws IOException {
+        socket.shutdownOutput();
+    }
     public String toString() {
 
         return null;

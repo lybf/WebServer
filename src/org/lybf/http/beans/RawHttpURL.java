@@ -1,8 +1,13 @@
 package org.lybf.http.beans;
 
+import java.net.URLDecoder;
 import java.util.HashMap;
 
 public class RawHttpURL {
+    public static final RawHttpURL OK = RawHttpURL.create(null, null, "HTTP/1.1", "200", "ok");
+
+    public static final RawHttpURL NOT_FOUND = RawHttpURL.create(null, null, "HTTP/1.1", "404", "404 not found resource");
+
     private String raw;
 
     private String METHOD;
@@ -59,15 +64,20 @@ public class RawHttpURL {
         return PATH;
     }
 
+    public String getDecPath() {
+        return URLDecoder.decode(PATH);
+    }
+
     public boolean hasKey() {
         return (PATH.contains("?"));
     }
 
     public HashMap<String, String> getKeys() {
         //System.out.println("has key = "+hasKey());
-        if (hasKey()) return processKey(PATH.split("\\?")[1]);
+        if (hasKey()) return processKey(getDecPath().split("\\?")[1]);
         return null;
     }
+
 
     private HashMap<String, String> processKey(String keys) {
         HashMap<String, String> keys2 = new HashMap<String, String>();
@@ -80,7 +90,12 @@ public class RawHttpURL {
             return keys2;
         } else {
             String[] s = keys.split("=");
-            keys2.put(s[0], s[1]);
+            if (s.length >= 2) {
+                keys2.put(s[0], s[1]);
+            } else {
+                keys2.put(s[0], "");
+
+            }
         }
         return keys2;
     }
@@ -141,7 +156,7 @@ public class RawHttpURL {
     public String toString() {
         String s = "";
         if (METHOD != null) s += METHOD + " ";
-        if (PATH != null) s += PATH + " ";
+        if (PATH != null) s += PATH+ " ";
         if (VERSION != null) s += VERSION + " ";
         if (STATE != null) s += STATE + " ";
         if (DESC != null) s += DESC;

@@ -9,6 +9,9 @@ public class FileType {
     public static final String GIF = "image/gif";
     public static final String JPEG = "image/jpeg";
     public static final String PNG = "image/png";
+    /*
+     *
+     */
     public static final String[][] contentType = {
             {HTML, ".html", ".htm"},
             {TEXT_PLAIN, ".txt"},
@@ -18,6 +21,9 @@ public class FileType {
             {PNG, ".png"}
     };
 
+    /*
+     *
+     */
     public static String getContentType(File file) {
         for (String[] str : contentType) {
             String type = str[0];

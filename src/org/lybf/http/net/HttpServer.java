@@ -9,7 +9,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+import java.lang.Thread;
 
 public class HttpServer {
     private int port;
@@ -93,6 +93,9 @@ public class HttpServer {
         return this;
     }
 
+    public boolean isRunning(){
+        return running;
+    }
     private int maxThreads = 10;
     private boolean running = true;
 
@@ -137,6 +140,7 @@ public class HttpServer {
                  if (listener != null) {
                     HttpRequest request = new HttpRequest(socket);
                     HttpRespond respond = new HttpRespond(socket);
+
                     listener.onRequest(request, respond);
                 }
 
