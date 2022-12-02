@@ -18,7 +18,7 @@ public class getDate extends BaseApi {
 
     @Override
     public void handler(HttpRequest request) {
-        System.out.println("handler:" + request.getRawHttpURL().toString());
+        //System.out.println("handler:" + request.getRawHttpURL().toString());
         //获取回应方法
         HttpRespond respond = getRespond();
 
@@ -54,6 +54,6 @@ public class getDate extends BaseApi {
 
     //接口名，用于识别接口
     public String getName() {
-        return "/getDate";
+        return "/apis/getDate";
     }
 }

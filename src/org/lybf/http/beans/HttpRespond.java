@@ -5,17 +5,14 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 public class HttpRespond {
+
     private final Socket socket;
 
     private OutputStream outputStream;
-    private RawHttpURL firstLine = OK;
+    private RawHttpURL firstLine = RawHttpURL.OK;
 
     private HttpHeader headers = new HttpHeader();
 
-
-    public static final RawHttpURL OK = RawHttpURL.create("", "", "HTTP/1.1", "200", "ok");
-
-    public static final RawHttpURL NOT_FOUND = RawHttpURL.create("", "", "HTTP/1.1", "404", "404 not found resource");
 
     private String CRLF = "\r\n";
 
@@ -42,10 +39,11 @@ public class HttpRespond {
         return outputStream;
     }
 
-    public HttpRespond setContentType(String type){
-        addRespondHeader("Content-type",type);
+    public HttpRespond setContentType(String type) {
+        addRespondHeader("Content-type", type);
         return this;
     }
+
     /*
         set header
      */
@@ -55,12 +53,12 @@ public class HttpRespond {
         headers.addHeader(key, value);
         return this;
     }
+
     public HttpRespond addRespondHeader(String key, int value) {
         if (infoHadWrite) throw new IllegalStateException("had connect,you can't to add any header info");
         headers.addHeader(key, value);
         return this;
     }
-
 
 
     public HttpRespond addRespondHeader(String key, long value) {
@@ -78,21 +76,26 @@ public class HttpRespond {
         return this;
     }
 
-    public HttpRespond setRespondHeader(String key,String value){
-        headers.setHeader(key,value);
-        return this;
-    }
-    public HttpRespond setRespondHeader(String key,int value){
-        headers.setHeader(key,value);
+    public HttpRespond setRespondHeader(String key, String value) {
+        headers.setHeader(key, value);
         return this;
     }
 
-    public HttpRespond setRespondHeader(String key,long value){
-        headers.setHeader(key,value);
+    public HttpRespond setRespondHeader(String key, int value) {
+        headers.setHeader(key, value);
+        return this;
+    }
+
+    public HttpRespond setRespondHeader(String key, long value) {
+        headers.setHeader(key, value);
         return this;
     }
 
     private boolean infoHadWrite;
+
+    public HttpRespond write(String string) throws IOException {
+        return write(string.getBytes());
+    }
 
     public HttpRespond write(byte[] bytes) throws IOException {
         /*
@@ -103,9 +106,9 @@ public class HttpRespond {
             String info = firstLine +
                     CRLF +
                     ((header.equals("") || header.toString() == null) ? "Content-type: text/plain" : header) +
-                    CRLF+"\n";
+                    CRLF + "\n";
 
-            System.out.println("info :\n"+info);
+            System.out.println("info :\n" + info);
             getOutputStream().write(info.getBytes());
             infoHadWrite = true;
         }
@@ -121,8 +124,9 @@ public class HttpRespond {
     public void disconnect() throws IOException {
         socket.shutdownOutput();
     }
-    public String toString() {
 
-        return null;
+    public String toString() {
+        return firstLine.toString() + CRLF +
+                headers.toString() + CRLF;
     }
 }

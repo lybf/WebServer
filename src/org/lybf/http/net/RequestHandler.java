@@ -60,13 +60,8 @@ public class RequestHandler {
 
             if (path.matches("^http")) {
                 processHttp(path, socket);
-            } else if (path.contains("?")) {
-                String[] datas = path.split("\\?");
-                //process getFiles action
-                if (datas[0].contains("getFiles")) processsGetFiles();
 
-            } else if (path.contains("getFiles")) {
-                processsGetFiles();
+
             } else if (path.equals("/") || path.equals("")) {
                 processText(httpServer.getIndexHtml(), "text/html");
             } else if (path.contains("html")) {
@@ -149,7 +144,6 @@ public class RequestHandler {
         File file = new File(p);
 
         StringBuffer sb = new StringBuffer();
-        System.out.println("file exists=" + file.exists());
         if (file.exists()) {
             respond.setFirstLine(RawHttpURL.OK);
             respond.addRespondHeader("Content-type", type + ";charset=utf-8");
@@ -184,79 +178,6 @@ public class RequestHandler {
         }
     }
 
-
-    private void processsGetFiles() {
-        String path = "\\";
-        HashMap<String, String> map = request.getRawHttpURL().getKeys();
-        if (map != null) {
-            if (map.containsKey("path")) {
-                path = map.get("path");
-            }
-        }
-        System.out.println("GetFiles = " + httpServer.getDir() + "\\" + path);
-        JSONArray jsonArray = new JSONArray();
-        File file = new File(httpServer.getDir() + "\\" + path);
-        File[] files = new File[0];
-        if (map != null && map.containsKey("filter")) {
-            System.out.println("filter = " + map.get("filter"));
-            final String filter = map.get("filter");
-            files = file.listFiles(new FileFilter() {
-                public boolean accept(File pathname) {
-                    return pathname.getName().endsWith(filter);
-                }
-            });
-        } else {
-            files = file.listFiles();
-        }
-        for (File f : files) {
-            JSONObject jobj = new JSONObject();
-            jobj.put("name", f.getName());
-            jobj.put("file", f.getName());
-            jobj.put("path", f.getPath().replace(httpServer.getDir(), ""));
-            jobj.put("lastModified", f.lastModified());
-            jobj.put("isDir", f.isDirectory());
-            jobj.put("size", f.length());
-            jobj.put("canRead", f.canRead());
-            jobj.put("date", new SimpleDateFormat("yyyy-dd-mm MM:HH:ss").format(
-                    new Date(f.lastModified())));
-            jsonArray.put(jobj);
-        }
-
-        respond.setFirstLine(RawHttpURL.OK);
-        System.out.println("has returnType=" + map.containsKey("returnType"));
-        if (map.containsKey("returnType")) {
-            if (map.get("returnType").equals("jsonp")) {
-                respond.addRespondHeader("Content-type", "application/javascrpit");
-                if (map.containsKey("callback")) {
-                    String method = map.get("callback");
-                    System.out.println("callbackMethod=" + method);
-                    StringBuffer back = new StringBuffer(method + "(" + jsonArray.toString() + ")");
-                    System.out.println("callback = " + back);
-                    respond.setRespondHeader(HttpHeader.ContentLength, back.toString().getBytes().length);
-
-                    try {
-                        respond.write(back.toString().getBytes());
-                        respond.disconnect();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        } else {
-            respond.addRespondHeader("Content-type", "application/json");
-
-            try {
-                respond.addRespondHeader(HttpHeader.ContentLength, jsonArray.toString().getBytes().length);
-                respond.write(jsonArray.toString().getBytes());
-                System.out.println("send " + jsonArray.toString());
-                respond.flush();
-                respond.disconnect();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
 
 
     private void cantNotFound() {

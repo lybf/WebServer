@@ -108,8 +108,9 @@ public class RawHttpURL {
         return STATE;
     }
 
-    public RawHttpURL parse(String rawHttpURL) {
-        if (rawHttpURL != null && hasMethod(rawHttpURL)) {
+    public RawHttpURL parse(String rawHttpURL) throws IllegalArgumentException, NullPointerException {
+        if (isEmpty(rawHttpURL)) throw new NullPointerException("can not be null or empty");
+        if (hasMethod(rawHttpURL)) {
             String[] s = rawHttpURL.split(" ");
             int i = s.length;
             switch (i) {
@@ -123,9 +124,23 @@ public class RawHttpURL {
                     PATH = s[1];
                 case 1:
                     METHOD = s[0];
+                    break;
                 default:
+                    throw new IllegalArgumentException(rawHttpURL + " is illegal");
             }
+        } else {
+            String[] s2 = rawHttpURL.split(" ");
+            //respond
+            if (s2.length == 3) {
+                VERSION = s2[0];
+                STATE = s2[1];
+                DESC = s2[2];
+            } else {
+                throw new IllegalArgumentException(rawHttpURL + "is illegal");
+            }
+
         }
+
         return this;
     }
 
@@ -155,12 +170,16 @@ public class RawHttpURL {
     @Override
     public String toString() {
         String s = "";
-        if (METHOD != null) s += METHOD + " ";
-        if (PATH != null) s += PATH+ " ";
-        if (VERSION != null) s += VERSION + " ";
-        if (STATE != null) s += STATE + " ";
-        if (DESC != null) s += DESC;
+        if (!isEmpty(METHOD)) s += METHOD + " ";
+        if (!isEmpty(PATH)) s += PATH + " ";
+        if (!isEmpty(VERSION)) s += VERSION + " ";
+        if (!isEmpty(STATE)) s += STATE + " ";
+        if (!isEmpty(DESC)) s += DESC;
         return s;
+    }
+
+    private boolean isEmpty(String str) {
+        return str == null || "".equals(str);
     }
 
     public static RawHttpURL create() {

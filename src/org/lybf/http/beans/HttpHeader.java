@@ -1,6 +1,5 @@
 package org.lybf.http.beans;
 
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.StringJoiner;

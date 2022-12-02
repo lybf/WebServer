@@ -93,9 +93,10 @@ public class HttpServer {
         return this;
     }
 
-    public boolean isRunning(){
+    public boolean isRunning() {
         return running;
     }
+
     private int maxThreads = 10;
     private boolean running = true;
 
@@ -137,8 +138,8 @@ public class HttpServer {
                 //  if(!socket.isConnected())return;
                 System.out.println("----------Accept a connect---------");
                 System.out.println("ip:" + socket.getInetAddress());
-                 if (listener != null) {
-                    HttpRequest request = new HttpRequest(socket);
+                if (listener != null) {
+                    HttpRequest request = new HttpRequest(HttpServer.this,socket);
                     HttpRespond respond = new HttpRespond(socket);
 
                     listener.onRequest(request, respond);

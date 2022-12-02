@@ -1,3 +1,4 @@
+import apis.getFiles;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -28,6 +29,8 @@ public class Main {
         //将接口添加至 APIManager
         api.add(getdate.getName(), getdate);
 
+        getFiles getFiles = new getFiles();
+        api.add(getFiles.getName(),getFiles);
         int port = 8064;//端口
         /*
          *设置网站根目录

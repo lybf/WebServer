@@ -1,7 +1,6 @@
 package org.lybf.http.api;
 
 import org.lybf.http.annation.API;
-import org.lybf.http.annation.Ignore;
 import org.lybf.http.beans.HttpRequest;
 import org.lybf.http.beans.HttpRespond;
 import org.lybf.http.beans.RawHttpURL;
@@ -15,10 +14,6 @@ import java.util.HashMap;
 public abstract class BaseApi {
 
 
-    /*
-     * Using @Ignore to ignore it
-     */
-    @Ignore
     private HttpRespond respond;
     private RawHttpURL rawHttpURL;
 
@@ -70,15 +65,8 @@ public abstract class BaseApi {
 
 
     //接口名，用于识别接口
-    public String getName() {
-        return "/base";
-    }
+    public abstract String getName() ;
 
-    ;
-
-    public HttpRespond getRespond() {
-        return respond;
-    }
     /*
      *example:
      *public String getName() {
@@ -86,8 +74,9 @@ public abstract class BaseApi {
      *}
      */
 
-    public void write(byte[] bytes) {
-
+    public HttpRespond getRespond() {
+        return respond;
     }
+
 
 }

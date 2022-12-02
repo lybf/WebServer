@@ -1,24 +1,25 @@
 package org.lybf.http.beans;
 
+import org.lybf.http.net.HttpServer;
+
 import java.io.*;
 import java.net.Socket;
 
 public class HttpRequest {
 
-    public static final RawHttpURL OK = RawHttpURL.create("", "", "HTTP/1.1", "200", "ok");
-
-    public static final RawHttpURL NOTFOUND = RawHttpURL.create("", "", "HTTP/1.1", "404", "404 not found resource");
 
     private static final String CRLF = "\r\n";
 
+    private final HttpServer httpServer;
     private final Socket socket;
 
     private InputStream inputStream;
-    private RawHttpURL firstLine = OK;
+    private RawHttpURL firstLine = RawHttpURL.OK;
 
     private HttpHeader header;
 
-    public HttpRequest(Socket socket) throws IOException {
+    public HttpRequest(HttpServer httpServer,Socket socket) throws IOException {
+        this.httpServer = httpServer;
         this.socket = socket;
         this.inputStream = socket.getInputStream();
         init();
@@ -35,12 +36,17 @@ public class HttpRequest {
             header.addHeader(k[0], k[1]);
         }
     }
-    public Socket getSocket(){
+
+    public Socket getSocket() {
         return socket;
     }
 
-    public HttpHeader getHeader(){
+    public HttpHeader getHeader() {
         return header;
+    }
+
+    public HttpServer getHttpServer(){
+        return httpServer;
     }
 
     public RawHttpURL getRawHttpURL() {
@@ -56,9 +62,13 @@ public class HttpRequest {
         return this;
     }
 
+    public void disconnect() throws IOException {
+        socket.shutdownInput();
+    }
 
     public String toString() {
-        return null;
+        return firstLine.toString() + CRLF +
+                header.toString() + CRLF;
     }
 }
 
