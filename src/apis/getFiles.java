@@ -26,8 +26,8 @@ public class getFiles extends BaseApi {
         HttpRespond respond = getRespond();
         String path = File.separator;
         if (containsKey("path")) {
-                path = getValue("path");
-            }
+            path = getValue("path");
+        }
 
         JSONArray jsonArray = new JSONArray();
         File file = new File(request.getHttpServer().getDir() + File.separator + path);

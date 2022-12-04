@@ -103,13 +103,15 @@ public class HttpServer {
 
     private ExecutorService threads;
 
-    public HttpServer startHttpServer() throws IOException {
+    public HttpServer startHttpServer() throws Exception {
+        if (listener == null) throw new Exception("RequestListener can not be null");
         this.running = true;
         this.threads = Executors.newFixedThreadPool(maxThreads);
         this.serverSocket.setSoTimeout(0);
 
         System.out.println("-------HttpServerStart--------");
-        System.out.println("ip:127.0.0.1:" + port);
+        System.out.println("ip:127.0.0.1:"+ port);
+        System.out.println("maxThread:"+maxThreads);
         System.out.println("------------------------------");
         System.out.println("wating connect");
         while (running) {
@@ -139,7 +141,7 @@ public class HttpServer {
                 System.out.println("----------Accept a connect---------");
                 System.out.println("ip:" + socket.getInetAddress());
                 if (listener != null) {
-                    HttpRequest request = new HttpRequest(HttpServer.this,socket);
+                    HttpRequest request = new HttpRequest(HttpServer.this, socket);
                     HttpRespond respond = new HttpRespond(socket);
 
                     listener.onRequest(request, respond);

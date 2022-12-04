@@ -14,6 +14,7 @@ import java.util.StringJoiner;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.lybf.http.beans.*;
+import org.lybf.http.utils.Progress;
 
 
 public class RequestHandler {
@@ -47,7 +48,7 @@ public class RequestHandler {
     }
 
     /*
-     *处理GET方法
+     *
      */
     private void processGET() {
         if (socket.isConnected()) {
@@ -203,17 +204,20 @@ public class RequestHandler {
         }
     }
 
-    //给客户端发送消息
-
-
     private void send(File file) throws Exception {
         System.out.println("-------------send-----------");
         System.out.println("SendFile = " + file.getPath());
         byte[] bytes = new byte[1024];
         int j = -1;
+        int le = 0;
+        Progress p = new Progress(50,'#');
+
         FileInputStream input = new FileInputStream(file);
         while ((j = input.read(bytes)) > 0) {
             respond.write(bytes);
+            le+=j;
+            p.setSuffix("("+le+"/"+file.length()+")");
+            p.show((int)(le/file.length())*100);
         }
         respond.flush();
         System.out.println("--------------endsend--------------");

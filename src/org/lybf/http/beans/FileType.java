@@ -33,6 +33,6 @@ public class FileType {
                 }
             }
         }
-        return null;
+        return "application/octet-stream";
     }
 }

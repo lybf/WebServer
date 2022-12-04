@@ -18,7 +18,7 @@ public abstract class BaseApi {
     private RawHttpURL rawHttpURL;
 
     /*
-     *  It will be invoke by Handler
+     *  It will be invoking by Handler
      */
     public BaseApi setRespond(HttpRespond respond) {
         this.respond = respond;
@@ -26,7 +26,7 @@ public abstract class BaseApi {
     }
 
     /*
-     *It will be invoke by Handler
+     *It will be invoking by Handler
      * Hashmap:
      * type= & returnType=
      */

@@ -108,7 +108,7 @@ public class HttpRespond {
                     ((header.equals("") || header.toString() == null) ? "Content-type: text/plain" : header) +
                     CRLF + "\n";
 
-            System.out.println("info :\n" + info);
+          //  System.out.println("info :\n" + info);
             getOutputStream().write(info.getBytes());
             infoHadWrite = true;
         }
