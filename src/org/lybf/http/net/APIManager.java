@@ -5,6 +5,7 @@ import org.lybf.http.beans.HttpRequest;
 import org.lybf.http.beans.HttpRespond;
 
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class APIManager {
     private static APIManager instance;
@@ -22,11 +23,23 @@ public class APIManager {
     }
 
     public APIManager remove(String path) {
+        if(hasAPI(path)){
+            apis.remove(path);
+        }
         return this;
     }
 
     public boolean hasAPI(String path) {
-        return apis.containsKey(path);
+        if (apis.containsKey(path))
+            return true;
+        Iterator<Object> api = apis.values().iterator();
+        while (api.hasNext()) {
+            BaseApi a = (BaseApi) api.next();
+            if (path.contains(a.getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void invoke(String path, HttpRequest request, HttpRespond respond) throws Exception {
@@ -38,10 +51,18 @@ public class APIManager {
     }
 
     public BaseApi getAPi(String path) {
-        if (apis.containsKey(path))
+        if (apis.containsKey(path)) {
             return (BaseApi) apis.get(path);
-        else
+        } else {
+            Iterator<Object> api = apis.values().iterator();
+            while (api.hasNext()) {
+                BaseApi a = (BaseApi) api.next();
+                 if (path.contains(a.getName())) {
+                    return a;
+                }
+            }
             return null;
+        }
     }
 
 }

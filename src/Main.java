@@ -1,10 +1,5 @@
+import apis.Download;
 import apis.getFiles;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.stream.JsonReader;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.lybf.http.beans.HttpRequest;
 import org.lybf.http.beans.HttpRespond;
 import org.lybf.http.beans.RawHttpURL;
@@ -14,11 +9,8 @@ import org.lybf.http.net.RequestHandler;
 import org.lybf.http.net.RequestListener;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import apis.getDate;
-import ui.MainActivity;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -32,10 +24,13 @@ public class Main {
         getFiles getFiles = new getFiles();
         api.add(getFiles.getName(), getFiles);
 
+        Download download = new Download();
+        api.add(download.getName(), download);
+
         int port = 8064;
 
         //root dir
-        String dir = "D:\\Projects\\HBuilder\\Homework\\";
+        String dir = System.getProperty("user.dir") + File.separator + "web";
         String index = "index.html";
 
         HttpServer server = new HttpServer();
@@ -51,6 +46,7 @@ public class Main {
                 //print request
                 System.out.println("httpRequest=\n" + request.getRawHttpURL().toString());
                 RawHttpURL raw = request.getRawHttpURL();
+                System.out.println("httpRequestPath="+raw.getPath());
                 //query api
                 if (api.hasAPI(raw.getPath())) {
                     try {

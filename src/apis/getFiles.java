@@ -17,8 +17,10 @@ import java.util.Date;
 public class getFiles extends BaseApi {
     @Override
     public void handler(HttpRequest request) {
+        System.out.println("-------/apis/getFiles--------");
+        System.out.println("requestPath="+getValue("path"));
         RawHttpURL rawHttpURL = request.getRawHttpURL();
-        String path = rawHttpURL.getPath();
+      //  String path = rawHttpURL.getPath();
         processsGetFiles(request);
     }
 
@@ -29,8 +31,17 @@ public class getFiles extends BaseApi {
             path = getValue("path");
         }
 
+        JSONObject jsonObject = new JSONObject();//respond message
         JSONArray jsonArray = new JSONArray();
-        File file = new File(request.getHttpServer().getDir() + File.separator + path);
+        File file = new File(path);
+        File file2 = new File(request.getHttpServer().getDir() + File.separator + path);
+        if(containsKey("goback")){
+            file = file.getParentFile();
+        }
+
+        if(!(new File(path)).exists()){
+            file = file2;
+        }
         File[] files = new File[0];
         if (containsKey("filter")) {
             System.out.println("filter = " + getValue("filter"));
@@ -55,7 +66,15 @@ public class getFiles extends BaseApi {
             jobj.put("date", new SimpleDateFormat("yyyy-dd-mm MM:HH:ss").format(
                     new Date(f.lastModified())));
             jsonArray.put(jobj);
+            System.out.println("------------content-----------\n"+jobj.toString()+"\n---------------");
         }
+        //respond message
+        jsonObject.put("files",jsonArray);
+        jsonObject.put("path",path);
+        jsonObject.put("time",System.currentTimeMillis());
+      //  jsonObject.put("file",new File(path).getName());
+
+
         respond.setFirstLine(RawHttpURL.OK);
         System.out.println("has returnType=" + containsKey("returnType"));
         if (containsKey("returnType")) {
@@ -64,7 +83,7 @@ public class getFiles extends BaseApi {
                 if (containsKey("callback")) {
                     String method = getValue("callback");
                     System.out.println("callbackMethod=" + method);
-                    StringBuffer back = new StringBuffer(method + "(" + jsonArray.toString() + ")");
+                    StringBuffer back = new StringBuffer(method + "(" + jsonObject.toString() + ")");
                     System.out.println("callback = " + back);
                     respond.setRespondHeader(HttpHeader.ContentLength, back.toString().getBytes().length);
                     try {
@@ -78,9 +97,9 @@ public class getFiles extends BaseApi {
         } else {
             respond.addRespondHeader("Content-type", "application/json");
             try {
-                respond.addRespondHeader(HttpHeader.ContentLength, jsonArray.toString().getBytes().length);
-                respond.write(jsonArray.toString().getBytes());
-                System.out.println("send " + jsonArray.toString());
+                respond.addRespondHeader(HttpHeader.ContentLength, jsonObject.toString().getBytes().length);
+                respond.write(jsonObject.toString().getBytes());
+                System.out.println("send " + jsonObject.toString());
                 respond.flush();
                 respond.disconnect();
             } catch (IOException e) {

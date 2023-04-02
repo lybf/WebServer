@@ -6,8 +6,10 @@ import java.util.StringJoiner;
 
 public class HttpHeader {
     public static final String ContentType = "Content-type";
+
     public static final String Host = "Host";
     public static final String ContentLength = "Content-Length";
+
     public static final String Accept = "Accept";
     private static final String CRLF = "\r\n";
 

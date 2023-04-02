@@ -99,13 +99,14 @@ public class HttpRespond {
 
     public HttpRespond write(byte[] bytes) throws IOException {
         /*
-            Write headers infomations if not write
+            Write headers infomations
          */
         if (!infoHadWrite) {
             String header = headers.toString();
+            //headers
             String info = firstLine +
                     CRLF +
-                    ((header.equals("") || header.toString() == null) ? "Content-type: text/plain" : header) +
+                    (("".equals(header) || header == null) ? "Content-type: text/plain" : header) +
                     CRLF + "\n";
 
           //  System.out.println("info :\n" + info);

@@ -148,8 +148,7 @@ public class RequestHandler {
         if (file.exists()) {
             respond.setFirstLine(RawHttpURL.OK);
             respond.addRespondHeader("Content-type", type + ";charset=utf-8");
-            respond.setRespondHeader(HttpHeader.ContentLength, file.length());
-            InputStream input = null;
+             InputStream input = null;
             try {
                 input = new FileInputStream(file);
             } catch (FileNotFoundException e) {
@@ -166,7 +165,7 @@ public class RequestHandler {
                 sb.append(s + System.lineSeparator());
             }
             try {
-                // respond.addRespondHeader(HttpHeader.ContentLength,sb.toString().getBytes().length);
+                respond.setRespondHeader(HttpHeader.ContentLength, sb.toString().getBytes().length);
 
                 respond.write(sb.toString().getBytes());
                 respond.flush();
@@ -210,14 +209,14 @@ public class RequestHandler {
         byte[] bytes = new byte[1024];
         int j = -1;
         int le = 0;
-        Progress p = new Progress(50,'#');
+        Progress p = new Progress(50,'*');
 
         FileInputStream input = new FileInputStream(file);
         while ((j = input.read(bytes)) > 0) {
             respond.write(bytes);
             le+=j;
             p.setSuffix("("+le+"/"+file.length()+")");
-            p.show((int)(le/file.length())*100);
+            p.show((int)(((double)le/file.length()))*100);
         }
         respond.flush();
         System.out.println("--------------endsend--------------");

@@ -12,14 +12,19 @@ import java.util.concurrent.Executors;
 import java.lang.Thread;
 
 public class HttpServer {
+    //web port
     private int port;
 
+    //root dir
     private String dir;
 
+    //index.html
     private String indexHtml;
 
     private ServerSocket serverSocket;
 
+
+    //extra resources
     private HashMap<String, String> htmls = new HashMap<>();
     private HashMap<String, String> res = new HashMap<>();
 
